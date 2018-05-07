@@ -10,6 +10,7 @@
 	Credits
 	~~~~~~~
 	javidx9 - The 'base' (get it) code of the engine
+	Kenan Ajkunic - Rest of the code
 
 	Author
 	~~~~~~
@@ -36,6 +37,7 @@
 #include <condition_variable>
 #include <fstream>
 #include <string>
+#include <sstream>
 
 using namespace std;
 
@@ -177,6 +179,17 @@ public:
 		if (y >= nScreenHeight) y = nScreenHeight;
 	}
 
+	void GetScreenResolution(int& h, int& v)
+	{
+		RECT screen;
+		const HWND hScreen = GetDesktopWindow();
+
+		GetWindowRect(hScreen, &screen);
+
+		h = screen.right;
+		v = screen.bottom;
+	}
+
 	void DrawCircle(int xc, int yc, int r, wchar_t c = 0x2588, short col = 0x000F)
 	{
 		int x = 0;
@@ -221,7 +234,41 @@ public:
 			if (p < 0) p += 4 * x++ + 6;
 			else p += 4 * (x++ - y--) + 10;
 		}
-	};
+	}
+
+	void Clamp(int val, int claMin, float claMax)
+	{
+		if (val >= claMax)
+			val = claMax;
+		else if (val <= claMin)
+			val = claMin;
+	}
+
+	void ClearScreen()
+	{
+		Fill(0, 0, ScreenWidth(), ScreenHeight(), L' ', 0);
+	}
+
+	void DrawString(int x, int y, wstring c, short col = 0x000F)
+	{
+		for (size_t i = 0; i < c.size(); i++)
+		{
+			bufScreen[y * nScreenWidth + x + i].Char.UnicodeChar = c[i];
+			bufScreen[y * nScreenWidth + x + i].Attributes = col;
+		}
+	}
+
+	void DrawStringAlpha(int x, int y, wstring c, short col = 0x000F)
+	{
+		for (size_t i = 0; i < c.size(); i++)
+		{
+			if (c[i] != L' ')
+			{
+				bufScreen[y * nScreenWidth + x + i].Char.UnicodeChar = c[i];
+				bufScreen[y * nScreenWidth + x + i].Attributes = col;
+			}
+		}
+	}
 
 	~BaseEngine()
 	{
@@ -249,16 +296,16 @@ public:
 		return nScreenHeight;
 	}
 
-	/*void Map()
+	void Map()
 	{
+		wstring map;
 		ifstream iMap("levels/level.txt");
 		string sMap;
-		while (getline(iMap, sMap))
+		for(int m = 0; m < 32; m++)
 		{
-			map += string(sMap);
-			map.push_back(L'\n');
+
 		}
-	}*/
+	}
 
 private:
 	void GameThread()
